@@ -82,10 +82,10 @@ private:
 public:
 
     PNG(std::string path) {
-        
-        
+
+
         stream = std::ifstream(path, std::ifstream::binary);
-       
+
         //get the file size
         fileSize = stream.tellg();
         stream.seekg(0, std::ios::end);
@@ -94,16 +94,16 @@ public:
 
         //put entire png file into vector
         rawdata = std::vector<char>((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
-        
+
         bytePointer = 0;
 
-        std::vector<char> v = {c(137), c(80), c(78), c(71), c(13), c(10), c(26), c(10)}; // PNG signature. All valid PNG files start with these same 8 bytes.
+        std::vector<char> v = { c(137), c(80), c(78), c(71), c(13), c(10), c(26), c(10) }; // PNG signature. All valid PNG files start with these same 8 bytes.
         if (!(this->getNextNByte(8) == v)) {
             std::cout << "thrw";
             throw std::runtime_error(std::string("Error: Not a Valid PNG"));
-            
+
         }
-        
+
         // if PNG is valid, reset bytePointer
         bytePointer = 0;
     }
@@ -111,7 +111,7 @@ public:
     void showRawData(unsigned int width = 16) {
         unsigned int count = 0;
         for (auto i = rawdata.begin(); i != rawdata.end(); i++) {
-        
+
             std::cout << *i;
             count++;
 
@@ -134,19 +134,19 @@ public:
 
     std::vector<char> getNextNByte(unsigned int n) {
         auto start = rawdata.begin() + bytePointer;
-        auto end = rawdata.begin() + n +bytePointer;
+        auto end = rawdata.begin() + n + bytePointer;
 
         // To store the sliced vector
-        std::vector<char> result(n );
+        std::vector<char> result(n);
 
         // Copy vector using copy function()
         copy(start, end, result.begin());
-        bytePointer = bytePointer + n ;
+        bytePointer = bytePointer + n;
         // Return the final sliced vector
         return result;
     }
 
-    void outputNextNByteAsChar(unsigned int n, std::string end = "\n",std::string between = "") {
+    void outputNextNByteAsChar(unsigned int n, std::string end = "\n", std::string between = "") {
         std::vector<char> buffer = this->getNextNByte(n);
 
         for (auto i = buffer.begin(); i != buffer.end(); i++) {
@@ -160,6 +160,8 @@ public:
 
     }
 
+    
+
     void outputNextNByteAsInt(unsigned int n, std::string end = "\n", std::string between = " ") {
         std::vector<char> buffer = this->getNextNByte(n);
 
@@ -172,7 +174,10 @@ public:
         std::cout << end;
 
 
+
     }
+
+
 
 
     void outputNextNByteAsHex(unsigned int n, std::string end = "\n", std::string between = " ") {
@@ -197,20 +202,97 @@ public:
 
         return 0;
     }
+
+    unsigned int get4ByteBufferAsBigEndianInt(std::vector<char> buffer) {
+    unsigned int total = 0;
+    char byte;
+    int index_extract = 0;
+    unsigned int one = 1;
+    for (int index = 3; index >= 0;index --) {
+        byte = buffer[index];
+        
+        for (int i = 0 ; i < 8; i++) {
+            bool aBit = byte & (1<<i);
+
+       
+            total += (aBit << index_extract);
+            index_extract++;
+
+        }
+       
+        
+        
+
+    }
+
+    return total;
+
+}
+    unsigned int get4ByteBufferAsBigEndianInt() {
+        std::vector<char> buffer = this->getNextNByte(4);
+        unsigned int total = 0;
+        char byte;
+        bool aBit;
+        int index_extract = 0;
+        unsigned int one = 1;
+        for (int index = 3; index >= 0; index--) {
+            byte = buffer[index];
+
+            for (int i = 0; i < 8; i++) {
+                aBit = byte & (1 << i);
+
+
+                total += (aBit << index_extract);
+                index_extract++;
+
+            }
+
+
+
+
+        }
+
+        return total;
+
+    }
+
+    unsigned int rewindBytePointer(unsigned int n) {
+        if (bytePointer - n < 0) return 0;
+        this->bytePointer -= n;
+        return n;
+    }
+
+
 };
+
+    
 
 int main()
 {
 
-    //PNG p("C:\\Users\\VISHAN\\Desktop\\AK4.png");
+    PNG p("C:\\Users\\VISHAN\\Desktop\\AK4.png");
+    unsigned int chunkLength;
 
-    PNG p("C:\\Users\\VISHAN\\Desktop\\New Text Document (4).txt");
+    //PNG p("C:\\Users\\VISHAN\\Desktop\\New Text Document (4).txt");
+        p.outputNextNByteAsInt(8, "\n", " ");
+        while (p.getBytePointer() < p.getFileSize()) {
 
-    p.outputNextNByteAsInt(8,"\n"," ");
-    p.skipNBytes(4);
-    p.outputNextNByteAsChar(4);
+            chunkLength = p.get4ByteBufferAsBigEndianInt();
+            std::cout << "chunk length: " << chunkLength << "\n";
+
+            std::cout << "chunk name: " ;
+            p.outputNextNByteAsChar(4);
+
+            std::cout << "skipping " << chunkLength << " bytes of chunk data\n";
+            p.skipNBytes(chunkLength);
+
+            std::cout << "CRC: ";
+            p.outputNextNByteAsInt(4);
+
+            std::cout << "\n";
 
 
+        }
     
 }
 
