@@ -99,7 +99,7 @@ public:
 
         std::vector<char> v = { c(137), c(80), c(78), c(71), c(13), c(10), c(26), c(10) }; // PNG signature. All valid PNG files start with these same 8 bytes.
         if (!(this->getNextNByte(8) == v)) {
-            std::cout << "thrw";
+            
             throw std::runtime_error(std::string("Error: Not a Valid PNG"));
 
         }
@@ -270,12 +270,12 @@ public:
 int main()
 {
 
-    PNG p("C:\\Users\\VISHAN\\Desktop\\AK4.png");
+    PNG p("C:\\<pathToImage>.png");
     unsigned int chunkLength;
 
-    //PNG p("C:\\Users\\VISHAN\\Desktop\\New Text Document (4).txt");
-        p.outputNextNByteAsInt(8, "\n", " ");
-        while (p.getBytePointer() < p.getFileSize()) {
+    
+     p.outputNextNByteAsInt(8, "\n", " ");
+     while (p.getBytePointer() < p.getFileSize()) {
 
             chunkLength = p.get4ByteBufferAsBigEndianInt();
             std::cout << "chunk length: " << chunkLength << "\n";
